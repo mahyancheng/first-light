@@ -2,7 +2,8 @@
 
 The original game's code and data were not used for these tests.
 
-- 28 deterministic and HTTP integration checks pass, including 20 distinct seeded campaigns traced for up to 16 quarters with cash reconciliation on every closed account.
+- 31 deterministic and HTTP integration checks pass, including 20 distinct seeded campaigns traced for up to 16 quarters with cash reconciliation on every closed account.
+- Supplier and rival conversations can return validated term drafts for their own company, while being unable to stage company-management actions. Term requests preserve requested quantities, dates, fee/price caps and royalties without mutating state.
 - The browser playtest at desktop and 390×844 phone size founded a company, queued research, closed Q1, requested an Arc Research licence, reviewed its counteroffer, committed it in Q2, launched a licensed product and closed Q3.
 - The final browser report showed 462 served accounts, $554,400 revenue, $66,528 royalties, $542,028 operating costs, $75,000 launch setup and $2,486,312 closing cash. These are results from the disposable test campaign, not the player's original save.
 - The phone workspace had a 390px document width at a 390px viewport. The named Chief of Staff and bottom navigation remained available. No old stacked drawers are used.

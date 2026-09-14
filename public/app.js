@@ -203,7 +203,7 @@ function chat(counterparty) {
             .join(""),
         )
       : "CS"
-  }</span><div><h2>${supplier ? e(supplier.person) : "Chief of Staff"}</h2><small>${supplier ? e(supplier.role) : "Your advisor. Your decisions."}</small></div></div><div class="chat-log">${messages.map((c) => `<div class="message you"><small>YOU · ${date(c.quarter)}</small>${e(c.message)}</div>${c.status === "pending" ? '<p class="loading-line" role="status">Reply in progress. Your message is saved; you can keep playing.</p>' : `<div class="message"><small>${c.status === "failed" ? "SERVICE STATUS" : supplier ? e(supplier.person.toUpperCase()) : "CHIEF OF STAFF"}</small>${e(c.reply)}</div>`}${(c.proposals ?? []).map((p, i) => `<div class="offer"><h3>${e(p.label)}</h3><p>${e(p.reason)}</p>${btn("Add to decisions →", `data-proposal="${e(c.id)}" data-index="${i}"`, "primary")}</div>`).join("")}`).join("") || empty(supplier ? "Discuss the trade-offs here. Use Request terms to obtain an executable quote with exact quantities, pricing and dates." : "Ask about your strategy, costs or next moves. Supported proposals can be added to Decisions for review.")}</div><form class="chat-compose" data-form="chat"><input type="hidden" name="counterparty" value="${e(counterparty)}"><label class="field">${supplier ? "Your message" : "What are you trying to achieve?"}<textarea name="message" maxlength="3000" required placeholder="Describe the outcome you want…"></textarea></label>${btn("Send message →", 'type="submit"', "dark")}<small class="spaced">${data.ai ? "Live replies may take a minute. Actions always require your review." : "Live advisor is not connected. Structured game controls remain available."}</small></form></section>`;
+  }</span><div><h2>${supplier ? e(supplier.person) : "Chief of Staff"}</h2><small>${supplier ? e(supplier.role) : "Your advisor. Your decisions."}</small></div></div><div class="chat-log">${messages.map((c) => `<div class="message you"><small>YOU · ${date(c.quarter)}</small>${e(c.message)}</div>${c.status === "pending" ? '<p class="loading-line" role="status">Reply in progress. Your message is saved; you can keep playing.</p>' : `<div class="message"><small>${c.status === "failed" ? "SERVICE STATUS" : supplier ? e(supplier.person.toUpperCase()) : "CHIEF OF STAFF"}</small>${e(c.reply)}</div>`}${(c.proposals ?? []).map((p, i) => `<div class="offer"><h3>${e(p.label)}</h3><p>${e(p.reason)}</p><small>${e(describe(p.action))}</small><div class="spaced"></div>${btn(p.action.type.startsWith("request_") ? "Get verified terms →" : "Add to decisions →", `data-proposal="${e(c.id)}" data-index="${i}"`, "primary")}</div>`).join("")}`).join("") || empty(supplier ? "Discuss the trade-offs here. Use Request terms to obtain an executable quote with exact quantities, pricing and dates." : "Ask about your strategy, costs or next moves. Supported proposals can be added to Decisions for review.")}</div><form class="chat-compose" data-form="chat"><input type="hidden" name="counterparty" value="${e(counterparty)}"><label class="field">${supplier ? "Your message" : "What are you trying to achieve?"}<textarea name="message" maxlength="3000" required placeholder="Describe the outcome you want…"></textarea></label>${btn("Send message →", 'type="submit"', "dark")}<small class="spaced">${data.ai ? "Live replies may take a minute. Actions always require your review." : "Live advisor is not connected. Structured game controls remain available."}</small></form></section>`;
 }
 function industry() {
   const s = data.state,
@@ -251,6 +251,10 @@ const describe = (a) => {
       return `${full(a.amount)} at ${full(a.valuation)} pre-money`;
     case "borrow":
       return `${full(a.amount)} · 12% annual interest`;
+    case "request_quote":
+      return `${a.units} compute units × ${a.duration} quarters from ${date(a.start)} · cap ${full(a.price)}/unit/quarter · ${a.cancellable ? "cancellable" : "firm"}`;
+    case "request_license":
+      return `${a.duration} quarters · upfront cap ${full(a.fee)} · royalty cap ${a.royalty}%`;
     case "license_model": {
       const x = s.licenseOffers?.find((o) => o.id === a.offerId);
       return x
@@ -558,6 +562,18 @@ root.addEventListener("click", async (event) => {
   if (b.dataset.proposal)
     action = data.state.chats.find((c) => c.id === b.dataset.proposal)
       ?.proposals[Number(b.dataset.index)]?.action;
+  if (action?.type === "request_quote" || action?.type === "request_license") {
+    const { type, ...terms } = action;
+    if (
+      await mutate(type === "request_quote" ? "quote" : "license-quote", terms)
+    ) {
+      notice =
+        "Verified terms are ready for review. Nothing has been accepted.";
+      location.hash = "industry/" + (terms.supplier || terms.companyId);
+      render();
+    }
+    return;
+  }
   if (action) {
     if (await mutate("stage", { action })) {
       notice = "Added to Decisions for your review.";
