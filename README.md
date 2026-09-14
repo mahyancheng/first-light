@@ -6,7 +6,7 @@ An original AI-company strategy game. Begin in 2023 with a small team, $4m and a
 
 ## Play loop
 
-HQ explains the current company situation. Lab composes architecture × training × output × scale × data. Business connects validated models to products, hiring, marketing and finance. Industry provides priced, capacity-constrained supply negotiation and conversations. Decisions commits the quarter and reports actual outcomes and reconciled accounts.
+HQ explains the current company situation. Lab composes architecture × training × output × scale × data. Business connects validated models to products, hiring, marketing and finance. Industry provides priced, capacity-constrained supply negotiation, rival conversations and model licensing. Licences transfer upfront fees and realised royalties to the counterparty and expire on a fixed date. Decisions commits the quarter and reports actual outcomes and reconciled accounts.
 
 Research needs time, researchers and compute. Products earn revenue only from served demand. Competitors improve their offerings. Compute contracts reserve finite supplier capacity and bill on their exact schedule, including unused capacity. Financing can be declined; successful equity financing dilutes founder ownership. Unpaid operating obligations can put the company into administration.
 

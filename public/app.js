@@ -17,7 +17,7 @@ const money = (v) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: Math.abs(v) >= 1000000 ? 1 : 0,
     notation: Math.abs(v) >= 1000000 ? "compact" : "standard",
   }).format(v || 0);
 const full = (v) =>
