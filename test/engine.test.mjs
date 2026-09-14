@@ -92,7 +92,11 @@ test("simultaneous actions share cash and rejected actions have receipts", () =>
   let s = createGame();
   s.cash = 500000;
   s = move(s, { ...research, scale: 7, data: 5 }, "research1");
-  s = move(s, { ...research, scale: 7, data: 5 }, "research2");
+  s = move(
+    s,
+    { ...research, name: "Second programme", scale: 7, data: 5 },
+    "research2",
+  );
   s = close(s);
   assert.equal(s.projects.length, 1);
   assert.equal(s.receipts.filter((x) => x.status === "rejected").length, 1);
@@ -323,4 +327,10 @@ test("prototype names cannot be interpreted as research catalogue entries", () =
     () => design({ ...research, architecture: "constructor" }),
     /Choose/,
   );
+});
+
+test("repeated button clicks cannot queue the same commitment twice", () => {
+  const s = move(createGame(), research);
+  assert.throws(() => move(s, research, "secondid1"), /already in Decisions/);
+  assert.equal(s.queue.length, 1);
 });

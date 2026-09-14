@@ -322,6 +322,14 @@ function decisions() {
   );
 }
 function render() {
+  const active = document.activeElement;
+  const focusName = active?.name;
+  const focusForm = active?.closest("form");
+  const focusIndex = focusForm
+    ? [...document.querySelectorAll("form")].indexOf(focusForm)
+    : -1;
+  const selection = active?.selectionStart ?? null;
+
   const drafts = [...document.querySelectorAll("form")].map((f) => ({
     key: f.dataset.form + (f.querySelector("[name=counterparty]")?.value || ""),
     values: [...f.elements].filter((x) => x.name).map((x) => [x.name, x.value]),
@@ -362,6 +370,23 @@ function render() {
     .querySelectorAll("button[type=submit]")
     .forEach((b) => (b.disabled = busy));
   preview();
+  const focusTarget =
+    focusIndex >= 0
+      ? document
+          .querySelectorAll("form")
+          [focusIndex]?.elements.namedItem(focusName)
+      : null;
+  if (focusTarget) {
+    focusTarget.focus({ preventScroll: true });
+    if (
+      selection !== null &&
+      typeof focusTarget.setSelectionRange === "function"
+    ) {
+      try {
+        focusTarget.setSelectionRange(selection, selection);
+      } catch {}
+    }
+  }
 }
 function preview() {
   const f = document.querySelector("[data-form=research]"),
@@ -396,13 +421,18 @@ function formData(f) {
   return b;
 }
 async function refresh() {
+  const previousRevision = data?.state?.revision;
   const r = await fetch("/api/state");
   if (!r.ok)
     throw Error(
       "The company could not be loaded. Check your connection and retry.",
     );
   data = await r.json();
-  render();
+  if (
+    previousRevision !== data.state?.revision ||
+    !root.querySelector(".layout")
+  )
+    render();
   clearTimeout(poll);
   if (data.state?.chats.some((c) => c.status === "pending"))
     poll = setTimeout(() => refresh().catch(showError), 2500);
@@ -413,6 +443,12 @@ function showError(err) {
 }
 async function mutate(path, body = {}) {
   if (busy) return;
+  if (sessionStorage.getItem("firstlight-pending")) {
+    notice =
+      "A previous delivery is unresolved. Refresh to reconcile it before submitting another move.";
+    render();
+    return false;
+  }
   busy = true;
   notice = "";
   const request = {

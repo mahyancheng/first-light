@@ -409,6 +409,14 @@ function cleanAction(a) {
 }
 export function stage(s, a, id) {
   validate(s, a);
+  if (
+    s.queue.some(
+      (x) => JSON.stringify(x.action) === JSON.stringify(cleanAction(a)),
+    )
+  )
+    fail(
+      "This exact move is already in Decisions. Edit or remove it there before adding it again.",
+    );
   if (s.queue.length >= 30)
     fail("Review the current 30 decisions before adding more.");
   if (s.queue.some((x) => x.id === id)) return s;
