@@ -8,7 +8,7 @@ export class Store {
     mkdirSync(dirname(path), { recursive: true });
     this.db = new DatabaseSync(path);
     this.db.exec(
-      "PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS games(owner TEXT PRIMARY KEY, state TEXT NOT NULL); CREATE TABLE IF NOT EXISTS requests(owner TEXT NOT NULL, id TEXT NOT NULL, hash TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(owner,id));",
+      "CREATE TABLE IF NOT EXISTS archives(owner TEXT NOT NULL,id TEXT NOT NULL,state TEXT NOT NULL,PRIMARY KEY(owner,id)); PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE IF NOT EXISTS games(owner TEXT PRIMARY KEY, state TEXT NOT NULL); CREATE TABLE IF NOT EXISTS requests(owner TEXT NOT NULL, id TEXT NOT NULL, hash TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(owner,id));",
     );
   }
   get(owner) {
@@ -98,6 +98,24 @@ export class Store {
           .run(JSON.stringify(s), row.owner);
       }
     }
+  }
+  archive(owner, id, state) {
+    const saved = structuredClone(state);
+    for (const c of saved.chats) {
+      if (c.status === "pending") {
+        c.status = "failed";
+        c.reply = "The campaign was archived before this reply completed.";
+      }
+    }
+    this.db
+      .prepare("INSERT INTO archives VALUES(?,?,?)")
+      .run(owner, id, JSON.stringify(saved));
+  }
+  archives(owner) {
+    return this.db
+      .prepare("SELECT state FROM archives WHERE owner=?")
+      .all(owner)
+      .map((r) => JSON.parse(r.state));
   }
   close() {
     this.db.close();

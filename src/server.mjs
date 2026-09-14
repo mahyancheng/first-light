@@ -77,6 +77,13 @@ export function app({
           `firstlight=${owner}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000${process.env.COOKIE_SECURE === "1" ? "; Secure" : ""}`,
         );
       }
+      if (req.method === "GET" && url.pathname === "/api/archive") {
+        res.setHeader(
+          "content-disposition",
+          'attachment; filename="first-light-archive.json"',
+        );
+        return send(200, { campaigns: store.archives(owner) });
+      }
       if (req.method === "GET" && url.pathname === "/api/state") {
         const state = store.get(owner);
         if (state)
@@ -123,6 +130,16 @@ export function app({
                 409,
               );
             return createGame(b.name, b.thesis, 2023);
+          }
+          if (url.pathname === "/api/restart") {
+            if (!state || state.status !== "administration")
+              throw new GameError(
+                "Only an ended campaign can be archived here.",
+                409,
+              );
+            const next = createGame(b.name, b.thesis, state.seed + 1);
+            store.archive(owner, b.id, state);
+            return next;
           }
           if (!state) throw new GameError("Found your company first.", 404);
           const s = structuredClone(state);

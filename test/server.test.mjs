@@ -138,3 +138,23 @@ test("recovery marks interrupted conversations without claiming delivery", async
   f.runtime.store.recover();
   assert.equal((await f.get()).state.chats[0].status, "failed");
 });
+
+test("an ended campaign can restart without erasing its archived history", async (t) => {
+  const f = await fixture(t);
+  await f.post("found", { id: "found0001", name: "First", thesis: "A" });
+  const owner = f.runtime.store.db
+    .prepare("SELECT owner FROM games")
+    .get().owner;
+  f.runtime.store.transact(owner, "cash00001", { revision: 0 }, (s) => ({
+    ...s,
+    cash: 1,
+  }));
+  await f.post("resolve", { id: "resolve01", revision: 1 });
+  assert.equal((await f.get()).state.status, "administration");
+  const b = { id: "restart01", revision: 2, name: "Second", thesis: "B" };
+  assert.equal((await f.post("restart", b)).status, 200);
+  assert.equal((await f.post("restart", b)).status, 200);
+  assert.equal((await f.get()).state.name, "Second");
+  assert.equal(f.runtime.store.archives(owner).length, 1);
+  assert.equal(f.runtime.store.archives(owner)[0].name, "First");
+});

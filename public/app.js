@@ -297,6 +297,15 @@ function decisions() {
   const s = data.state,
     total = s.queue.reduce((n, x) => n + cost(s, x.action), 0),
     reportMode = page.includes("/report");
+  if (s.status === "administration" && !reportMode)
+    return (
+      head(
+        "The end of this company",
+        "A chapter closes.",
+        "The company could not meet its obligations. Its accounts remain available; you can begin again without erasing its history.",
+      ) +
+      `<div class="grid equal"><section class="panel"><h2>Found a new company</h2><form data-form="restart"><div class="fields">${field("Company name", "name", "Second Light Labs", "text", 'maxlength="60"')}<label class="field full">Your next thesis<textarea name="thesis" maxlength="300" required>Prove demand before expanding commitments.</textarea></label></div><div class="form-foot"><small>The ended campaign is archived on the server.</small>${btn("Archive this chapter & begin →", 'type="submit"', "primary")}</div></form></section><section class="panel"><h2>Keep the lessons</h2><p class="muted">Review the last quarter’s decisions and the cash that ran out.</p><div class="spread spaced">${link("Read the final account", "decisions/report")}<a class="btn" href="/api/archive" download>Download prior campaigns</a></div></section></div>`
+    );
   if (reportMode)
     return (
       head(
@@ -497,9 +506,10 @@ root.addEventListener("submit", async (event) => {
   const kind = f.dataset.form,
     b = formData(f);
   let ok;
-  if (kind === "found") {
+  if (kind === "found" || kind === "restart") {
     delete b.year;
-    ok = await mutate("found", b);
+    ok = await mutate(kind, b);
+    if (ok) location.hash = "hq";
   } else if (kind === "resolve") {
     if (b.confirm !== "yes") return;
     ok = await mutate("resolve");
